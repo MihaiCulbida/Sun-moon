@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>затмение</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: radial-gradient(circle, #ffd966, #ff9e00);
+      transition: background 0.05s linear;
+      overflow: hidden;
+    }
+
+    #sun {
+      position: absolute;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #fff799 0%, #ffdf00 40%, #ff9900 70%, #ff6600 100%);
+      box-shadow: 0 0 60px 30px rgba(255, 200, 0, 0.8),
+                  0 0 120px 60px rgba(255, 140, 0, 0.6);
+      z-index: 1;
+    }
+
+    #moon {
+      position: absolute;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #555, #222 70%);
+      cursor: grab;
+      z-index: 2;
+      box-shadow: inset -10px -10px 20px rgba(0,0,0,0.7),
+                  inset 10px 10px 30px rgba(100,100,100,0.2);
+    }
+
+    #moon::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background-image: radial-gradient(circle at 30% 30%, rgba(0,0,0,0.4) 0%, transparent 20%),
+                        radial-gradient(circle at 70% 50%, rgba(0,0,0,0.3) 0%, transparent 15%),
+                        radial-gradient(circle at 40% 70%, rgba(255,255,255,0.1) 0%, transparent 10%),
+                        radial-gradient(circle at 60% 20%, rgba(0,0,0,0.2) 0%, transparent 18%);
+      background-size: cover;
+    }
+  </style>
+</head>
+<body>
+  <div id="sun"></div>
+  <div id="moon" style="left: 50px; top: 50px;"></div>
+
+  <script>
+    const sun = document.getElementById('sun');
+    const moon = document.getElementById('moon');
+    const body = document.body;
+
+    const sunX = window.innerWidth / 2;
+    const sunY = window.innerHeight / 2;
+    const radius = 110;
+
+    let isDragging = false;
+
+    moon.addEventListener('mousedown', () => {
+      isDragging = true;
+      moon.style.cursor = "grabbing";
+    });
+
+    document.addEventListener('mouseup', () => {
+      isDragging = false;
+      moon.style.cursor = "grab";
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+
+      moon.style.left = `${e.pageX - 100}px`;
+      moon.style.top = `${e.pageY - 100}px`;
+
+      const dx = e.pageX - sunX;
+      const dy = e.pageY - sunY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      let overlap = Math.max(0, 1 - distance / (radius * 2));
+      overlap = Math.min(overlap, 1);
+
+      const colors = [
+        [255, 217, 102],  
+        [255, 69, 0],     
+        [70, 130, 180], 
+        [0, 0, 0]         
+      ];
+
+      function lerp(a, b, t) {
+        return a + (b - a) * t;
+      }
+
+      let seg = overlap * (colors.length - 1);
+      let i = Math.floor(seg);
+      let t = seg - i;
+
+      const c1 = colors[i];
+      const c2 = colors[i + 1] || c1;
+
+      const r = Math.floor(lerp(c1[0], c2[0], t));
+      const g = Math.floor(lerp(c1[1], c2[1], t));
+      const b = Math.floor(lerp(c1[2], c2[2], t));
+
+      body.style.background = `radial-gradient(circle, rgb(${r},${g},${b}), rgb(${r*0.3},${g*0.3},${b*0.5}))`;
+
+      const glow = 1 - overlap;
+      sun.style.boxShadow = `0 0 ${60*glow}px ${30*glow}px rgba(255,200,0,0.8),
+                             0 0 ${120*glow}px ${60*glow}px rgba(255,140,0,0.6)`;
+    });
+  </script>
+</body>
+</html>
